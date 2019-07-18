@@ -37,6 +37,9 @@
 .PARAMETER ScoopCacheDir
     Specifies cache directory.
     Cache directory will be '$ScoopDir\cache' if not specificed.
+.PARAMETER ScoopPackage
+    A link to the zipped archive of scoop.
+    Default build is 'https://github.com/lukesampson/scoop/archive/master.zip' if not specified.
 .PARAMETER NoProxy
     Specifies bypass system proxy or not while installation.
 .PARAMETER Proxy
@@ -56,6 +59,7 @@ param(
     [String] $ScoopDir,
     [String] $ScoopGlobalDir,
     [String] $ScoopCacheDir,
+    [String] $ScoopPackage,
     [Switch] $NoProxy,
     [Uri] $Proxy,
     [System.Management.Automation.PSCredential] $ProxyCredential,
@@ -413,11 +417,21 @@ function Install-Scoop {
 $IS_EXECUTED_FROM_IEX = ($null -eq $MyInvocation.MyCommand.Path)
 
 # Scoop root directory
-$SCOOP_DIR = $ScoopDir, $env:SCOOP, "$env:USERPROFILE\scoop" | Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
+$SCOOP_DIR = $ScoopDir,
+             $env:SCOOP,
+             "$env:USERPROFILE\scoop" |
+                Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
 # Scoop global apps directory
-$SCOOP_GLOBAL_DIR = $ScoopGlobalDir, $env:SCOOP_GLOBAL, "$env:ProgramData\scoop" | Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
+$SCOOP_GLOBAL_DIR = $ScoopGlobalDir,
+                    $env:SCOOP_GLOBAL,
+                    "$env:ProgramData\scoop" |
+                        Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
 # Scoop cache directory
-$SCOOP_CACHE_DIR = $ScoopCacheDir, $env:SCOOP_CACHE, "$SCOOP_DIR\cache" | Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
+$SCOOP_CACHE_DIR = $ScoopCacheDir,
+                   $env:SCOOP_CACHE,
+                   $env:XDG_CACHE_HOME,
+                   "$SCOOP_DIR\cache" |
+                        Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
 # Scoop shims directory
 $SCOOP_SHIMS_DIR = "$SCOOP_DIR\shims"
 # Scoop itself directory
@@ -426,7 +440,9 @@ $SCOOP_APP_DIR = "$SCOOP_DIR\apps\scoop\current"
 $SCOOP_MAIN_BUCKET_DIR = "$SCOOP_DIR\buckets\main"
 
 # TODO: Use a specific version of Scoop and the main bucket
-$SCOOP_PACKAGE_REPO = "https://github.com/lukesampson/scoop/archive/master.zip"
+$SCOOP_PACKAGE_REPO = $ScoopPackage,
+                      "https://github.com/lukesampson/scoop/archive/master.zip" |
+                        Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
 $SCOOP_MAIN_BUCKET_REPO = "https://github.com/ScoopInstaller/Main/archive/master.zip"
 
 # Quit if anything goes wrong
